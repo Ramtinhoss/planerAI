@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the app",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "interests": { "type": "array", "items": { "type": "string" } },
+            "preferredAirlines": { "type": "array", "items": { "type": "string" } },
+            "hotelPreferences": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "loyaltyPrograms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "programName": { "type": "string" },
+              "memberId": { "type": "string" }
+            }
+          }
+        }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Trip": {
+      "title": "Trip",
+      "description": "A saved trip or itinerary",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "destination": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "description": { "type": "string" },
+        "itineraryDays": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "date": { "type": "string", "format": "date" },
+              "activities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "string" },
+                    "time": { "type": "string" },
+                    "location": { "type": "string" },
+                    "notes": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "budget": { "type": "number" },
+        "expenses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "amount": { "type": "number" },
+              "category": { "type": "string" },
+              "description": { "type": "string" },
+              "date": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "bookings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string" },
+              "details": { "type": "object" },
+              "cost": { "type": "number" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "destination", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles"
+    },
+    "trips/{tripId}": {
+      "schema": { "$ref": "#/entities/Trip" },
+      "description": "Saved trips"
+    }
+  }
+}

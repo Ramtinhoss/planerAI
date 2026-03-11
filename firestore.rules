@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Document ID: userId
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - email: string (required)
+    //   - displayName: string (optional)
+    //   - createdAt: string (required, immutable)
+    //   - preferences: map (optional)
+    //   - loyaltyPrograms: list (optional)
+    //
+    // Collection: trips
+    // Document ID: tripId
+    // Fields:
+    //   - id: string (required, immutable)
+    //   - userId: string (required, immutable)
+    //   - destination: string (required)
+    //   - itinerary: string (optional)
+    //   - budget: number (optional)
+    //   - expenses: list (optional)
+    //   - bookings: list (optional)
+    //   - createdAt: string (required, immutable)
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    function uidUnchanged() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid;
+    }
+    function uidNotModified() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+    }
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && hasRequiredFields(['uid', 'email', 'createdAt']) && request.resource.data.uid == userId;
+      allow update: if isOwner(userId) && request.resource.data.uid == resource.data.uid && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    match /trips/{tripId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && hasRequiredFields(['id', 'userId', 'destination', 'createdAt']) && request.resource.data.userId == request.auth.uid;
+      allow update: if isDocOwner() && uidNotModified() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner();
+    }
+  }
+}

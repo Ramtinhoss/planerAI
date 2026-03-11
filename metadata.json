@@ -1,0 +1,5 @@
+{
+  "name": "WanderAI",
+  "description": "Your personal AI travel agent and planner.",
+  "requestFramePermissions": ["microphone"]
+}
