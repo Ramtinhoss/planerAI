@@ -136,6 +136,11 @@ export function Trips() {
               </button>
             </div>
             <h3 className="text-xl font-bold text-slate-900 mb-1">{trip.destination}</h3>
+            {trip.locations && trip.locations.length > 0 && (
+              <p className="text-sm text-slate-600 mb-2 line-clamp-1">
+                {trip.locations.map((l: any) => `${l.city}, ${l.country}`).join(' • ')}
+              </p>
+            )}
             {trip.startDate && trip.endDate && (
               <p className="text-xs text-slate-500 mb-3">{trip.startDate} to {trip.endDate}</p>
             )}
@@ -167,6 +172,9 @@ function TripDetails({ trip, onBack }: { trip: any, onBack: () => void }) {
   // Itinerary state
   const [newDayDate, setNewDayDate] = useState('');
   const [newActivity, setNewActivity] = useState({ dayId: '', time: '', location: '', notes: '' });
+
+  // Locations state
+  const [newLocation, setNewLocation] = useState({ city: '', country: '' });
 
   const handleUpdateBudget = async () => {
     try {
@@ -277,6 +285,26 @@ function TripDetails({ trip, onBack }: { trip: any, onBack: () => void }) {
     }
   };
 
+  const handleAddLocation = async () => {
+    if (!newLocation.city || !newLocation.country) return;
+    try {
+      const updatedLocations = [...(trip.locations || []), { id: uuidv4(), city: newLocation.city, country: newLocation.country }];
+      await updateDoc(doc(db, 'trips', trip.docId), { locations: updatedLocations });
+      setNewLocation({ city: '', country: '' });
+    } catch (error) {
+      console.error('Error adding location:', error);
+    }
+  };
+
+  const handleDeleteLocation = async (locationId: string) => {
+    try {
+      const updatedLocations = (trip.locations || []).filter((l: any) => l.id !== locationId);
+      await updateDoc(doc(db, 'trips', trip.docId), { locations: updatedLocations });
+    } catch (error) {
+      console.error('Error deleting location:', error);
+    }
+  };
+
   const totalExpenses = (trip.expenses || []).reduce((sum: number, e: any) => sum + e.amount, 0);
   const totalBookings = (trip.bookings || []).reduce((sum: number, b: any) => sum + (b.cost || 0), 0);
   const totalSpent = totalExpenses + totalBookings;
@@ -322,10 +350,43 @@ function TripDetails({ trip, onBack }: { trip: any, onBack: () => void }) {
 
       {activeTab === 'overview' ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Budget Tracker */}
           <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2"><DollarSign className="w-5 h-5 text-emerald-500" /> Budget Tracker</h3>
+            {/* Locations */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2"><MapPin className="w-5 h-5 text-indigo-500" /> Locations</h3>
+              
+              {(!trip.locations || trip.locations.length === 0) ? (
+                <p className="text-slate-500 text-sm mb-4">No locations added yet.</p>
+              ) : (
+                <div className="space-y-2 mb-4">
+                  {trip.locations.map((loc: any) => (
+                    <div key={loc.id} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                      <div>
+                        <p className="font-medium text-slate-900 text-sm">{loc.city}</p>
+                        <p className="text-xs text-slate-500">{loc.country}</p>
+                      </div>
+                      <button onClick={() => handleDeleteLocation(loc.id)} className="text-slate-400 hover:text-red-500">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="border-t border-slate-200 pt-4">
+                <div className="space-y-2">
+                  <input type="text" placeholder="City" value={newLocation.city} onChange={e => setNewLocation({...newLocation, city: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+                  <input type="text" placeholder="Country" value={newLocation.country} onChange={e => setNewLocation({...newLocation, country: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+                  <button onClick={handleAddLocation} disabled={!newLocation.city || !newLocation.country} className="w-full bg-slate-900 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-50">
+                    Add Location
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Budget Tracker */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2"><DollarSign className="w-5 h-5 text-emerald-500" /> Budget Tracker</h3>
             
             <div className="flex gap-2 mb-6">
               <input

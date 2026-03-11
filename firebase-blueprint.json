@@ -38,6 +38,17 @@
         "id": { "type": "string" },
         "userId": { "type": "string" },
         "destination": { "type": "string" },
+        "locations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "city": { "type": "string" },
+              "country": { "type": "string" }
+            }
+          }
+        },
         "startDate": { "type": "string", "format": "date" },
         "endDate": { "type": "string", "format": "date" },
         "description": { "type": "string" },
